@@ -1,23 +1,17 @@
 import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
 def start(update: Update, context: CallbackContext) -> None:
+    # Define the button with a URL
     keyboard = [
-        [
-            InlineKeyboardButton("Option 1", callback_data='1'),
-            InlineKeyboardButton("Option 2", callback_data='2')
-        ],
-        [InlineKeyboardButton("Option 3", callback_data='3')]
+        [InlineKeyboardButton("Visit Webapp", url='https://t.me/BankthriftBot/store')]
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
-def button(update: Update, context: CallbackContext) -> None:
-    query = update.callback_query
-    query.answer()
-    query.edit_message_text(text=f"Selected option: {query.data}")
+    # Send the message with the button
+    update.message.reply_text('Click the button below to visit our web app:', reply_markup=reply_markup)
 
 def main():
     token = os.getenv('TELEGRAM_TOKEN')
@@ -25,7 +19,6 @@ def main():
 
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(CallbackQueryHandler(button))
 
     updater.start_polling()
     updater.idle()
