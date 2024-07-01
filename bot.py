@@ -1,5 +1,7 @@
 import os
 import threading
+import time
+import requests
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
@@ -8,10 +10,10 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
 def start(update: Update, context: CallbackContext) -> None:
     keyboard = [
         [
-            InlineKeyboardButton("Option 1", callback_data='1'),
-            InlineKeyboardButton("Option 2", callback_data='2')
+            InlineKeyboardButton("Visit Store ", callback_data='1'),
+            InlineKeyboardButton("Join our community", callback_data='2')
         ],
-        [InlineKeyboardButton("Option 3", callback_data='3')]
+        [InlineKeyboardButton("Join WhatsApp", callback_data='3')]
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -22,7 +24,7 @@ def button(update: Update, context: CallbackContext) -> None:
     query.answer()
     query.edit_message_text(text=f"Selected option: {query.data}")
 
-# Simple HTTP server to keep the web service alive
+# Simple HTTP server to keep the web service alive and serve a link to YouTube
 class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -34,6 +36,15 @@ def run_http_server():
     server_address = ('', int(os.environ.get('PORT', 8000)))
     httpd = HTTPServer(server_address, RequestHandler)
     httpd.serve_forever()
+
+def keep_alive():
+    while True:
+        try:
+            # Ping the local server to keep the service alive
+            requests.get('http://localhost:8000')
+        except Exception as e:
+            print(f'Error in keep_alive: {e}')
+        time.sleep(300)  # Ping every 5 minutes
 
 def main():
     token = os.getenv('TELEGRAM_TOKEN')
