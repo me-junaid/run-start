@@ -1,64 +1,30 @@
-import os
-import threading
-import time
-import requests
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+    from flask import Flask, request
+    from telegram import Update, Bot
+    from telegram.ext import CommandHandler, Dispatcher, Updater, CallbackContext
+    import os
+    import threading
 
-# Telegram bot handlers
-def start(update: Update, context: CallbackContext) -> None:
-    keyboard = [
-        [
-            InlineKeyboardButton("Visit Store ", callback_data='1'),
-            InlineKeyboardButton("Join our community", callback_data='2')
-        ],
-        [InlineKeyboardButton("Join WhatsApp", callback_data='3')]
-    ]
+    app = Flask(__name__)
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Please choose:', reply_markup=reply_markup)
+    TOKEN = os.getenv('TELEGRAM_TOKEN')
+    bot = Bot(token=TOKEN)
 
-def button(update: Update, context: CallbackContext) -> None:
-    query = update.callback_query
-    query.answer()
-    query.edit_message_text(text=f"Selected option: {query.data}")
+    def start(update: Update, context: CallbackContext) -> None:
+        update.message.reply_text('Hello! Welcome to the bot.')
 
-# Simple HTTP server to keep the web service alive and serve a link to YouTube
-class RequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-        self.wfile.write(b'Bot is running')
+    def run_bot():
+        updater = Updater(TOKEN, use_context=True)
+        dispatcher = updater.dispatcher
 
-def run_http_server():
-    server_address = ('', int(os.environ.get('PORT', 8000)))
-    httpd = HTTPServer(server_address, RequestHandler)
-    httpd.serve_forever()
+        dispatcher.add_handler(CommandHandler("start", start))
 
-def keep_alive():
-    while True:
-        try:
-            # Ping the local server to keep the service alive
-            requests.get('http://localhost:8000')
-        except Exception as e:
-            print(f'Error in keep_alive: {e}')
-        time.sleep(300)  # Ping every 5 minutes
+        updater.start_polling()
+        updater.idle()
 
-def main():
-    token = os.getenv('TELEGRAM_TOKEN')
-    updater = Updater(token)
+    @app.route('/')
+    def home():
+        return 'Bot is running'
 
-    dispatcher = updater.dispatcher
-    dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(CallbackQueryHandler(button))
-
-    # Start the Telegram bot in a separate thread
-    threading.Thread(target=updater.start_polling).start()
-
-    # Start the simple HTTP server
-    run_http_server()
-
-if __name__ == '__main__':
-    main()
+    if __name__ == '__main__':
+        threading.Thread(target=run_bot).start()
+        app.run(host='0.0.0.0', port=5000)
