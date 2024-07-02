@@ -1,30 +1,44 @@
-    from flask import Flask, request
-    from telegram import Update, Bot
-    from telegram.ext import CommandHandler, Dispatcher, Updater, CallbackContext
-    import os
-    import threading
+from telegram.ext import Updater, CommandHandler
+import requests
+import threading
+import time
+import os
 
-    app = Flask(__name__)
+# Function to handle /start command
+def start(update, context):
+    update.message.reply_text('Hello! Your bot is running.')
 
-    TOKEN = os.getenv('TELEGRAM_TOKEN')
-    bot = Bot(token=TOKEN)
+def main():
+    # Get the bot token and chat ID from environment variables
+    token = os.getenv('TELEGRAM_BOT_TOKEN')
+    chat_id = os.getenv('CHAT_ID')
 
-    def start(update: Update, context: CallbackContext) -> None:
-        update.message.reply_text('Hello! Welcome to the bot.')
+    # Create the Updater and pass it your bot's token
+    updater = Updater(token, use_context=True)
 
-    def run_bot():
-        updater = Updater(TOKEN, use_context=True)
-        dispatcher = updater.dispatcher
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
 
-        dispatcher.add_handler(CommandHandler("start", start))
+    # Add handler for /start command
+    dp.add_handler(CommandHandler("start", start))
 
-        updater.start_polling()
-        updater.idle()
+    # Start the Bot
+    updater.start_polling()
 
-    @app.route('/')
-    def home():
-        return 'Bot is running'
+    # Start keep-alive mechanism in a separate thread
+    threading.Thread(target=keep_alive, args=(token, chat_id)).start()
 
-    if __name__ == '__main__':
-        threading.Thread(target=run_bot).start()
-        app.run(host='0.0.0.0', port=5000)
+    # Run the bot until you press Ctrl-C or the process receives SIGINT, SIGTERM or SIGABRT
+    updater.idle()
+
+def keep_alive(token, chat_id):
+    while True:
+        try:
+            requests.get(f'https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text=keep-alive')
+            time.sleep(600)  # Sleep for 10 minutes
+        except Exception as e:
+            print(f"Error: {e}")
+            time.sleep(60)  # Retry after 1 minute in case of error
+
+if __name__ == '__main__':
+    main()
