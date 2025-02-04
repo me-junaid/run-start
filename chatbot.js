@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function() {
     "hello": "Hi! How can I help you today?",
     "how are you": "I'm just a chatbot, but I'm doing great! How about you?",
     "bye": "Goodbye! Have a nice day!",
-    "default": "Sorry, I didn't understand that. Can you ask something else?"
+    "default": "Sorry, poddo"
   };
 
   // Function to display messages in the chat box
