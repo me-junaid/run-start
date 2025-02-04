@@ -1,5 +1,11 @@
 // Initialize chatbot
 document.addEventListener("DOMContentLoaded", function() {
+  let link = document.createElement('link');
+link.rel = 'stylesheet';
+link.type = 'text/css';
+link.href = 'ttps://me-junaid.github.io/run-start/chatbot.css'; // Path to your CSS file
+document.head.appendChild(link);
+
   // Create a simple chat container
   const chatContainer = document.createElement("div");
   chatContainer.setAttribute("id", "chatbot");
